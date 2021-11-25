@@ -8,16 +8,17 @@ import sys
 from subprocess import Popen, PIPE
 import shutil
 from ipaddress import ip_address
-from pexpect import spawn
 from collections import Counter
 # https://docs.python.org/3/library/ipaddress.html
 
 
 def valid_ip(ip):
-    return ip_address(ip).is_private and not ip_address(ip).is_unspecified and not ip_address(ip).is_link_local and not ip_address(ip).is_reserved
+    return ip_address(ip).is_private and not ip_address(ip).is_unspecified \
+        and not ip_address(ip).is_link_local and not ip_address(ip).is_reserved
 
 
 def green(msg): return "\033[92m{}\033[00m".format(msg)
+
 
 def callback(packet):
     global list_ip
@@ -51,18 +52,34 @@ def callback(packet):
             res = '{} -> {}'.format(src, dst)
             print(res)
 
+
 def signal_handler(sig, frame):
     print("\nResults :")
     ip_ctr = Counter(list_ip).most_common()
+    unavailible_ips = {}
     networks = {}
     for i, j in ip_ctr:
-        subnet = str(ip_address(int(ip_address(i)) & ~ 0xff)) + '/24'
+        subnet = str(ip_address(int(ip_address(i)) & ~ 0xff))
+        last_byte = int(ip_address(i)) & 0xff
         if subnet in networks:
             networks[subnet] += j
+            unavailible_ips[subnet].append(last_byte)
         else:
             networks[subnet] = j
+            unavailible_ips[subnet] = [last_byte]
         print('{} : {}'.format(green(i.ljust(16)), j))
-    ip_mask = max(networks, key=lambda x: networks[x])
+    mask = max(networks, key=lambda x: networks[x])
+    availible_last_byte_list = filter(lambda x: x not in
+                                      unavailible_ips[subnet], range(2, 255))
+    try:
+        availible_last_byte = next(availible_last_byte_list)
+    except StopIteration:
+        print("Error, no availible ip found in subnet {}/24".format(subnet))
+        return
+    print(mask, availible_last_byte)
+    ip_mask = str(ip_address(int(ip_address(mask)) +
+                             availible_last_byte)) + '/24'
+
     cmd1 = ['ip', 'address', 'flush', 'dev', iface]
     cmd2 = ['ip', 'address', 'add', ip_mask, 'dev', iface]
     cmd3 = ['ip', '--brief', 'address', 'show', 'dev', iface]
@@ -79,11 +96,15 @@ def signal_handler(sig, frame):
         elif resp == "" or resp.lower() == "y":
             break
     with Popen(cmd1, stdout=PIPE, stderr=PIPE) as a:
-        [print("> " + i.decode(), end="") for i in [a.stdout.read(), a.stderr.read()] if i != b'']
+        [print("> " + i.decode(), end="") for i in
+         [a.stdout.read(), a.stderr.read()] if i != b'']
     with Popen(cmd2, stdout=PIPE, stderr=PIPE) as a:
-        [print("> " + i.decode(), end="") for i in [a.stdout.read(), a.stderr.read()] if i != b'']
+        [print("> " + i.decode(), end="") for i in
+         [a.stdout.read(), a.stderr.read()] if i != b'']
     with Popen(cmd3, stdout=PIPE, stderr=PIPE) as a:
-        [print("> " + i.decode(), end="") for i in [a.stdout.read(), a.stderr.read()] if i != b'']
+        [print("> " + i.decode(), end="") for i in
+         [a.stdout.read(), a.stderr.read()] if i != b'']
+
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
