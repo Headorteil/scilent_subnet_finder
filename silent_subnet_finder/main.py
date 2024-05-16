@@ -11,12 +11,14 @@ from subprocess import PIPE, Popen
 
 from rich.prompt import Confirm
 from rich.console import Console
+from rich.status import Status
 import pyshark
 
 
 class AppManager:
     def __init__(self, console, iface):
         self.console = console
+        self.live = None
         self.iface = iface
 
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -83,7 +85,9 @@ class AppManager:
             self.console.print(f"> {shlex.join(cmd)}", style="orange1")
 
         self.console.print()
-        execute = Confirm.ask("[?] Execute theses commands ?", console=self.console)
+        execute = Confirm.ask(
+            "[yellow1][?] Execute theses commands ?[yellow1]", console=self.console
+        )
         if not execute:
             return
         self.console.print()
@@ -95,7 +99,13 @@ class AppManager:
 
     def capture(self):
         capture = pyshark.LiveCapture(interface=self.iface, bpf_filter="ip or arp")
-        capture.apply_on_packets(self.callback)
+        with Status(
+            "[blue]Gathering paquets...[/blue]",
+            spinner="aesthetic",
+            console=self.console,
+        ) as live:
+            self.live = live
+            capture.apply_on_packets(self.callback)
 
     def callback(self, packet):
         if not ("ip" in packet or "arp" in packet):
@@ -118,7 +128,7 @@ class AppManager:
             dst = f"[green]{dst}[/green]"
 
         if valid:
-            self.console.print(
+            self.live.console.print(
                 f"\[*] [bold]{src}[/bold] -> [bold]{dst}[/bold]", style="blue"
             )
 
