@@ -1,18 +1,18 @@
 import multiprocessing
 import os
+import shlex
 import shutil
 import signal
 import sys
-import shlex
 from collections import Counter
 from ipaddress import ip_address
 from random import shuffle
 from subprocess import PIPE, Popen
 
-from rich.prompt import Confirm
-from rich.console import Console
-from rich.status import Status
 import pyshark
+from rich.console import Console
+from rich.prompt import Confirm
+from rich.status import Status
 
 
 class AppManager:
@@ -29,7 +29,7 @@ class AppManager:
     def run(self):
         self.workr.start()
 
-    def signal_handler(self, sig, frame):
+    def signal_handler(self, *_):
         self.workr.terminate()
         list_ip = []
         while not self.q.empty():
@@ -66,9 +66,8 @@ class AppManager:
                 f"\[-] No availible ip found in subnet {subnet}/24", style="red"
             )
             return
-        else:
-            shuffle(availible_last_bytes)
-            availible_last_byte = availible_last_bytes[0]
+        shuffle(availible_last_bytes)
+        availible_last_byte = availible_last_bytes[0]
         ip_mask = str(ip_address(int(ip_address(mask)) + availible_last_byte)) + "/24"
 
         self.console.print()

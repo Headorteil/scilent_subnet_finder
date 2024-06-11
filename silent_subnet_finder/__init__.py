@@ -1,12 +1,12 @@
-from typing_extensions import Annotated
 from enum import Enum
 
 import psutil
 import typer
+from typing_extensions import Annotated
 
 from silent_subnet_finder.main import real_main
 
-Ifaces = Enum("Ifaces", {key: key for key in psutil.net_if_addrs().keys()})
+Ifaces = Enum("Ifaces", {key: key for key in psutil.net_if_addrs()})
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
