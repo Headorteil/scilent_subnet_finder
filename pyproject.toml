@@ -6,7 +6,7 @@ authors = ["Headorteil"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.9"
 pyshark = "^0.6"
 rich = "^13.7.1"
 typer = "^0.12.3"
@@ -23,27 +23,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff.lint]
-extend-select = [
-  "B",        # flake8-bugbear
-  "I",        # isort
-  "ARG",      # flake8-unused-arguments
-  "C4",       # flake8-comprehensions
-  "EM",       # flake8-errmsg
-  "ICN",      # flake8-import-conventions
-  "G",        # flake8-logging-format
-  "PGH",      # pygrep-hooks
-  "PIE",      # flake8-pie
-  "PL",       # pylint
-  "PT",       # flake8-pytest-style
-  "PTH",      # flake8-use-pathlib
-  "RET",      # flake8-return
-  "RUF",      # Ruff-specific
-  "SIM",      # flake8-simplify
-  "T20",      # flake8-print
-  "UP",       # pyupgrade
-  "YTT",      # flake8-2020
-  "EXE",      # flake8-executable
-  "NPY",      # NumPy specific rules
-  "PD",       # pandas-vet
-  "PYI",      # flake8-pyi
+select = ["ALL"]
+ignore = [
+  "D203",   # Incompatibilities
+  "D213",   # Incompatibilities
+  "COM812", # Incompatibilities
+  "ISC001", # Incompatibilities
 ]

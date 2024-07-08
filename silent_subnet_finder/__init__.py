@@ -1,3 +1,5 @@
+"""Listen to the network and get a proper IP."""
+
 from enum import Enum
 
 import psutil
@@ -12,8 +14,8 @@ app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 
 @app.command()
-def main(iface: Annotated[Ifaces, typer.Argument(help="Interface to configure")]):
-    """
-    Update tour network config to a right one
-    """
+def main(
+    iface: Annotated[Ifaces, typer.Argument(help="Interface to configure")],
+) -> None:
+    """Update tour network config to a right one."""
     real_main(iface.value)
